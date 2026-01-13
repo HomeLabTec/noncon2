@@ -16,6 +16,9 @@
                 <th>Rejection Type</th>
                 <th>Disposition</th>
                 <th>Status</th>
+                {% if view == "open" %}
+                    <th>Days Open</th>
+                {% endif %}
                 <th>Updated</th>
                 <th></th>
             </tr>
@@ -34,6 +37,9 @@
                         <span class="status-pill status-open">Open</span>
                     {% endif %}
                 </td>
+                {% if view == "open" %}
+                    <td>{{ row.days_open }}</td>
+                {% endif %}
                 <td>{{ row.updated_at or row.created_at }}</td>
                 <td class="table-actions">
                     <a class="btn-link" href="{{ url_for('view_tag', tag_id=row.id) }}">View</a>
@@ -41,7 +47,7 @@
                 </td>
             </tr>
             {% else %}
-            <tr><td colspan="7">No records available.</td></tr>
+            <tr><td colspan="{% if view == 'open' %}8{% else %}7{% endif %}">No records available.</td></tr>
             {% endfor %}
         </tbody>
     </table>

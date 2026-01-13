@@ -181,6 +181,21 @@ def list_tags(conn: sqlite3.Connection, is_closed: Optional[bool] = None) -> Lis
     if is_closed is None:
         sql = "SELECT * FROM tags ORDER BY (created_at IS NULL), created_at DESC"
         return conn.execute(sql).fetchall()
+    if is_closed is False:
+        days_open_expr = (
+            "CAST(julianday('now') - "
+            "julianday(date(COALESCE(containment_date, date_authorized, created_at))) "
+            "AS INTEGER)"
+        )
+        sql = f"""
+            SELECT
+                *,
+                {days_open_expr} AS days_open
+            FROM tags
+            WHERE is_closed = 0
+            ORDER BY (updated_at IS NULL), updated_at DESC
+        """
+        return conn.execute(sql).fetchall()
     sql = "SELECT * FROM tags WHERE is_closed = ? ORDER BY (updated_at IS NULL), updated_at DESC"
     return conn.execute(sql, (1 if is_closed else 0,)).fetchall()
 
@@ -259,10 +274,12 @@ def report_rows_open(
     falling back to created_at when the others are missing.
     """
     report_date_expr = "date(COALESCE(containment_date, date_authorized, closed_date, created_at))"
+    days_open_expr = f"CAST(julianday('now') - julianday({report_date_expr}) AS INTEGER)"
     sql = f"""
         SELECT
             *,
-            {report_date_expr} AS report_date
+            {report_date_expr} AS report_date,
+            {days_open_expr} AS days_open
         FROM tags
         WHERE is_closed = 0
           AND {report_date_expr} BETWEEN ? AND ?

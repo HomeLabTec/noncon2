@@ -4,6 +4,8 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Dict, Optional
 
+import subprocess
+
 from flask import (
     Flask,
     abort,
@@ -211,6 +213,71 @@ def coerce_date_param(value: Optional[str]) -> Optional[date]:
         return None
 
 
+def safe_int(value: Optional[str]) -> int:
+    if value is None:
+        return 0
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return 0
+
+
+def send_postfix_email(to_address: str, from_address: str, subject: str, body: str) -> None:
+    message = "\n".join(
+        [
+            f"To: {to_address}",
+            f"From: {from_address}",
+            f"Subject: {subject}",
+            "",
+            body,
+            "",
+        ]
+    )
+    try:
+        subprocess.run(
+            ["/usr/sbin/sendmail", "-t", "-oi"],
+            input=message,
+            text=True,
+            check=True,
+        )
+    except FileNotFoundError:
+        app.logger.warning("sendmail not found; email not sent.")
+    except subprocess.CalledProcessError as exc:
+        app.logger.warning("sendmail failed: %s", exc)
+
+
+def format_open_tag_email(row: Dict[str, Optional[str]]) -> str:
+    return "\n".join(
+        [
+            "Open Tag Report",
+            f"Tag #: {row.get('tag_number')}",
+            f"Part: {row.get('part_description')}",
+            f"Defect / Issue Description: {row.get('defect_description')}",
+            "Status: Open",
+            f"Report Date: {row.get('report_date')}",
+            f"Days Open: {row.get('days_open')}",
+        ]
+    )
+
+
+def format_closed_tag_email(row: Dict[str, Optional[str]]) -> str:
+    good_pcs = safe_int(row.get("good_pcs"))
+    reworked_pcs = safe_int(row.get("reworked_pcs"))
+    return "\n".join(
+        [
+            "Closed Tag Report",
+            f"Tag #: {row.get('tag_number')}",
+            f"Part: {row.get('part_description')}",
+            f"Defect / Issue Description: {row.get('defect_description')}",
+            "Status: Closed",
+            f"Report Date: {row.get('report_date')}",
+            f"Good Pieces: {good_pcs + reworked_pcs}",
+            f"Scrap Pieces: {row.get('scrap_pcs')}",
+            f"Date Closed: {row.get('closed_date')}",
+        ]
+    )
+
+
 # -----------------------------------------------------------------------------
 # Routes
 # -----------------------------------------------------------------------------
@@ -278,7 +345,15 @@ def create_tag():
         else:
             if not data.get("tag_number"):
                 data["tag_number"] = database.generate_tag_number(db)
-            database.insert_tag(db, data)
+            tag_id = database.insert_tag(db, data)
+            report_row = database.report_row_open(db, tag_id)
+            if report_row is not None:
+                send_postfix_email(
+                    to_address="anthony.lonsway@thecsp.com",
+                    from_address="NewNonConAlert@thecsp.local",
+                    subject=f"New Non-Conforming Tag Created: {report_row['tag_number']}",
+                    body=format_open_tag_email(dict(report_row)),
+                )
             flash("Tag created successfully.", "success")
             return redirect(url_for("list_open_tags"))
     else:
@@ -310,7 +385,18 @@ def edit_tag(tag_id: int):
     if request.method == "POST":
         updated_data = normalize_form_data(request.form)
         updated_data["tag_number"] = data.get("tag_number")
+        was_closed = bool(row["is_closed"])
         database.update_tag(db, tag_id, updated_data)
+        updated_row = database.get_tag(db, tag_id)
+        if updated_row is not None and not was_closed and bool(updated_row["is_closed"]):
+            report_row = database.report_row_closed(db, tag_id)
+            if report_row is not None:
+                send_postfix_email(
+                    to_address="anthony.lonsway@thecsp.com",
+                    from_address="ClosedNonConAlert@thecsp.local",
+                    subject=f"Non-Conforming Tag Closed: {report_row['tag_number']}",
+                    body=format_closed_tag_email(dict(report_row)),
+                )
         flash("Tag updated.", "success")
         return redirect(url_for("edit_tag", tag_id=tag_id))
 

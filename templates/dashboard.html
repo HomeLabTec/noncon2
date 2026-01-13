@@ -68,7 +68,7 @@
                 <tr>
                     <th>Tag #</th>
                     <th>Part</th>
-                    <th>Rejection Type</th>
+                    <th>Defect / Issue Description</th>
                     <th>Status</th>
                     <th>Report Date</th>
                     <th></th>
@@ -79,7 +79,7 @@
                 <tr>
                     <td>{{ row.tag_number }}</td>
                     <td>{{ row.part_description }}</td>
-                    <td>{{ row.rejection_type }}</td>
+                    <td>{{ row.defect_description }}</td>
                     <td>
                         {% if row.is_closed %}
                             <span class="status-pill status-closed">Closed</span>
@@ -169,7 +169,7 @@
                 <tr>
                     <th>Tag #</th>
                     <th>Part</th>
-                    <th>Rejection</th>
+                    <th>Defect / Issue Description</th>
                     <th>Status</th>
                     <th>Date</th>
                 </tr>
@@ -179,7 +179,7 @@
                 <tr>
                     <td>{{ row.tag_number }}</td>
                     <td>{{ row.part_description }}</td>
-                    <td>{{ row.rejection_type }}</td>
+                    <td>{{ row.defect_description }}</td>
                     <td>{% if row.is_closed %}Closed{% else %}Open{% endif %}</td>
                     <td>{{ row.report_date }}</td>
                 </tr>

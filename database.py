@@ -313,3 +313,31 @@ def report_summary(rows: Iterable[sqlite3.Row]) -> Dict[str, int]:
     open_count = sum(1 for row in rows_list if not row["is_closed"])
     closed_count = total - open_count
     return {"total": total, "open": open_count, "closed": closed_count}
+
+
+def report_row_open(conn: sqlite3.Connection, tag_id: int) -> Optional[sqlite3.Row]:
+    report_date_expr = "date(COALESCE(containment_date, date_authorized, closed_date, created_at))"
+    days_open_expr = f"CAST(julianday('now') - julianday({report_date_expr}) AS INTEGER)"
+    sql = f"""
+        SELECT
+            *,
+            {report_date_expr} AS report_date,
+            {days_open_expr} AS days_open
+        FROM tags
+        WHERE id = ?
+          AND is_closed = 0
+    """
+    return conn.execute(sql, (tag_id,)).fetchone()
+
+
+def report_row_closed(conn: sqlite3.Connection, tag_id: int) -> Optional[sqlite3.Row]:
+    report_date_expr = "date(COALESCE(containment_date, date_authorized, closed_date, created_at))"
+    sql = f"""
+        SELECT
+            *,
+            {report_date_expr} AS report_date
+        FROM tags
+        WHERE id = ?
+          AND is_closed = 1
+    """
+    return conn.execute(sql, (tag_id,)).fetchone()

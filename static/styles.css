@@ -630,8 +630,8 @@ tbody td {
 
 @media print {
     @page {
-        size: Letter;
-        margin: 0.35in;
+        size: Letter landscape;
+        margin: 0.3in;
     }
     body {
         background: #fff;
@@ -649,8 +649,9 @@ tbody td {
     .print-sheet {
         display: block !important;
         box-shadow: none;
-        padding: 0.4in 0.45in;
+        padding: 0.35in 0.3in;
         margin: 0 auto;
+        width: 100%;
         max-width: none;
         line-height: 1.3;
     }

@@ -230,7 +230,13 @@ def dashboard():
     if start > end:
         start, end = end, start
     start_str, end_str = start.isoformat(), end.isoformat()
-    report_rows = database.report_rows(db, start_str, end_str)
+    report_tab = request.args.get("report_tab", "open")
+    if report_tab not in {"open", "closed"}:
+        report_tab = "open"
+    if report_tab == "closed":
+        report_rows = database.report_rows_closed(db, start_str, end_str)
+    else:
+        report_rows = database.report_rows_open(db, start_str, end_str)
     report_summary = database.report_summary(report_rows)
     return render_template(
         "dashboard.html",
@@ -239,6 +245,7 @@ def dashboard():
         report_rows=report_rows,
         report_summary=report_summary,
         report_range={"start": start_str, "end": end_str},
+        report_tab=report_tab,
     )
 
 

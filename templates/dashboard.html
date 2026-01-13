@@ -30,7 +30,27 @@
         </div>
     </header>
 
+    <div class="report-tabs" role="tablist" aria-label="Report type">
+        <a
+            class="report-tab{% if report_tab == 'open' %} is-active{% endif %}"
+            href="{{ url_for('dashboard', report_tab='open', start_date=report_range.start, end_date=report_range.end) }}"
+            role="tab"
+            aria-selected="{{ 'true' if report_tab == 'open' else 'false' }}"
+        >
+            Open Report
+        </a>
+        <a
+            class="report-tab{% if report_tab == 'closed' %} is-active{% endif %}"
+            href="{{ url_for('dashboard', report_tab='closed', start_date=report_range.start, end_date=report_range.end) }}"
+            role="tab"
+            aria-selected="{{ 'true' if report_tab == 'closed' else 'false' }}"
+        >
+            Closed Report
+        </a>
+    </div>
+
     <form id="report-form" class="report-form" method="get" action="{{ url_for('dashboard') }}">
+        <input type="hidden" name="report_tab" value="{{ report_tab }}">
         <div class="report-filters">
             <label class="form-field">
                 <span>Start date</span>
@@ -71,6 +91,11 @@
                     <th>Defect / Issue Description</th>
                     <th>Status</th>
                     <th>Report Date</th>
+                    {% if report_tab == "closed" %}
+                        <th>Good Pieces</th>
+                        <th>Scrap Pieces</th>
+                        <th>Date Closed</th>
+                    {% endif %}
                     <th></th>
                 </tr>
             </thead>
@@ -88,6 +113,11 @@
                         {% endif %}
                     </td>
                     <td>{{ row.report_date }}</td>
+                    {% if report_tab == "closed" %}
+                        <td>{{ (row.good_pcs | int) + (row.reworked_pcs | int) }}</td>
+                        <td>{{ row.scrap_pcs }}</td>
+                        <td>{{ row.closed_date }}</td>
+                    {% endif %}
                     <td class="table-actions">
                         <a class="btn-link" href="{{ url_for('view_tag', tag_id=row.id) }}">View</a>
                         <a class="btn-link" href="{{ url_for('edit_tag', tag_id=row.id) }}">Edit</a>
@@ -95,7 +125,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6">No records found for this date range.</td>
+                    <td colspan="{% if report_tab == 'closed' %}9{% else %}6{% endif %}">No records found for this date range.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -148,7 +178,9 @@
     <div class="print-header">
         <div class="print-tag-block">
             <p class="print-label">Report</p>
-            <div class="print-tag-number">Tags {{ report_range.start }} to {{ report_range.end }}</div>
+            <div class="print-tag-number">
+                {% if report_tab == "closed" %}Closed{% else %}Open{% endif %} Tags {{ report_range.start }} to {{ report_range.end }}
+            </div>
         </div>
         <div class="print-meta">
             <div class="print-date">
@@ -172,6 +204,11 @@
                     <th>Defect / Issue Description</th>
                     <th>Status</th>
                     <th>Date</th>
+                    {% if report_tab == "closed" %}
+                        <th>Good Pieces</th>
+                        <th>Scrap Pieces</th>
+                        <th>Date Closed</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -182,10 +219,15 @@
                     <td>{{ row.defect_description }}</td>
                     <td>{% if row.is_closed %}Closed{% else %}Open{% endif %}</td>
                     <td>{{ row.report_date }}</td>
+                    {% if report_tab == "closed" %}
+                        <td>{{ (row.good_pcs | int) + (row.reworked_pcs | int) }}</td>
+                        <td>{{ row.scrap_pcs }}</td>
+                        <td>{{ row.closed_date }}</td>
+                    {% endif %}
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="5">No records found for this date range.</td>
+                    <td colspan="{% if report_tab == 'closed' %}8{% else %}5{% endif %}">No records found for this date range.</td>
                 </tr>
                 {% endfor %}
             </tbody>

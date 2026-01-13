@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == 'edit' %}Edit Tag{% else %}New Tag{% endif %} · Nonconforming Tracker{% endblock %}
+{% block content %}
+<section class="form-header">
+    <h1>{% if mode == 'edit' %}Edit Tag{% else %}Create New Tag{% endif %}</h1>
+    {% if mode == 'edit' %}
+        <p class="muted">Tag #{{ form_data.tag_number }}</p>
+    {% endif %}
+</section>
+<form method="post" class="tag-form" novalidate>
+    {% for section in form_sections %}
+        <section class="form-section">
+            <header class="section-header inline">
+                <h2 class="section-title">{{ section.title }}</h2>
+            </header>
+            <div class="section-grid">
+                {% for field in section.fields %}
+                    {% set name = field.name %}
+                    {% set label = field.label %}
+                    {% set value = form_data.get(name) %}
+                    <div class="form-field" data-field="{{ name }}">
+                        <label for="{{ name }}">{{ label }}</label>
+                        {% if field.type == 'textarea' %}
+                            <textarea id="{{ name }}" name="{{ name }}" rows="3">{{ value or '' }}</textarea>
+                        {% elif field.type == 'select' %}
+                            {% set selected_value = select_values.get(name) %}
+                            <select id="{{ name }}" name="{{ name }}" data-has-other="true">
+                                <option value="">Select an option</option>
+                                {% for option in dropdowns.get(field.options_key, []) %}
+                                    <option value="{{ option }}" {% if selected_value == option %}selected{% endif %}>{{ option }}</option>
+                                {% endfor %}
+                                <option value="__other__" {% if selected_value == '__other__' %}selected{% endif %}>Other</option>
+                            </select>
+                            <input type="text"
+                                   id="{{ name }}_other"
+                                   name="{{ name }}_other"
+                                   class="other-input"
+                                   placeholder="Enter custom value"
+                                   value="{{ other_values.get(name, '') }}"
+                                   {% if selected_value != '__other__' %}hidden{% endif %}>
+                        {% elif field.type == 'date' %}
+                            <input type="date" id="{{ name }}" name="{{ name }}" value="{{ value }}">
+                        {% else %}
+                            <input type="text" id="{{ name }}" name="{{ name }}" value="{{ value or '' }}" {% if field.readonly %}readonly{% endif %}>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        </section>
+    {% endfor %}
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary">{% if mode == 'edit' %}Save Changes{% else %}Create Tag{% endif %}</button>
+        <a class="btn" href="{{ url_for('list_open_tags') }}">Back to list</a>
+    </div>
+    {% if mode == 'edit' %}
+        <div class="delete-form">
+            <button type="submit"
+                    class="btn btn-danger"
+                    formaction="{{ url_for('delete_tag', tag_id=tag_id) }}"
+                    formmethod="post"
+                    onclick="return confirm('Delete this tag? This action cannot be undone.');">
+                Delete Tag
+            </button>
+        </div>
+    {% endif %}
+    <p class="muted small">Tip: Picking "Other" reveals a text box so you can capture custom values while keeping standard dropdowns quick to use.</p>
+</form>
+{% endblock %}

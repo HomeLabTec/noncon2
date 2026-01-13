@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · Nonconforming Tracker{% endblock %}
+{% block content %}
+<section class="dashboard-grid">
+    <article class="stat-card">
+        <h2>Total Tags</h2>
+        <p class="stat-number">{{ stats.total }}</p>
+    </article>
+    <article class="stat-card">
+        <h2>Open Tags</h2>
+        <p class="stat-number">{{ stats.open }}</p>
+    </article>
+    <article class="stat-card">
+        <h2>Closed Tags</h2>
+        <p class="stat-number">{{ stats.closed }}</p>
+    </article>
+</section>
+
+<section class="report-panel">
+    <header class="section-header">
+        <div>
+            <p class="muted small">Report</p>
+            <h2 class="section-title">Run a date range report</h2>
+        </div>
+        <div class="report-actions">
+            <button type="submit" form="report-form" class="btn btn-primary">Run Report</button>
+            {% if report_summary.total %}
+                <button type="button" class="btn" data-print-target="report-print-sheet">Print</button>
+            {% endif %}
+        </div>
+    </header>
+
+    <form id="report-form" class="report-form" method="get" action="{{ url_for('dashboard') }}">
+        <div class="report-filters">
+            <label class="form-field">
+                <span>Start date</span>
+                <input type="date" name="start_date" value="{{ report_range.start }}">
+            </label>
+            <label class="form-field">
+                <span>End date</span>
+                <input type="date" name="end_date" value="{{ report_range.end }}">
+            </label>
+        </div>
+    </form>
+
+    <div class="report-summary">
+        <div class="summary-chip">
+            <span class="muted small">Total</span>
+            <strong>{{ report_summary.total }}</strong>
+        </div>
+        <div class="summary-chip">
+            <span class="muted small">Open</span>
+            <strong>{{ report_summary.open }}</strong>
+        </div>
+        <div class="summary-chip">
+            <span class="muted small">Closed</span>
+            <strong>{{ report_summary.closed }}</strong>
+        </div>
+        <div class="summary-chip">
+            <span class="muted small">Range</span>
+            <strong>{{ report_range.start }} to {{ report_range.end }}</strong>
+        </div>
+    </div>
+
+    <div class="table-responsive report-table">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tag #</th>
+                    <th>Part</th>
+                    <th>Rejection Type</th>
+                    <th>Status</th>
+                    <th>Report Date</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report_rows %}
+                <tr>
+                    <td>{{ row.tag_number }}</td>
+                    <td>{{ row.part_description }}</td>
+                    <td>{{ row.rejection_type }}</td>
+                    <td>
+                        {% if row.is_closed %}
+                            <span class="status-pill status-closed">Closed</span>
+                        {% else %}
+                            <span class="status-pill status-open">Open</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.report_date }}</td>
+                    <td class="table-actions">
+                        <a class="btn-link" href="{{ url_for('view_tag', tag_id=row.id) }}">View</a>
+                        <a class="btn-link" href="{{ url_for('edit_tag', tag_id=row.id) }}">Edit</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">No records found for this date range.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="recent-section">
+    <header class="section-header">
+        <h2>Recently Updated</h2>
+        <a href="{{ url_for('list_all_tags') }}" class="section-link">View all</a>
+    </header>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tag #</th>
+                    <th>Part</th>
+                    <th>Rejection Type</th>
+                    <th>Status</th>
+                    <th>Updated</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in recent %}
+                <tr>
+                    <td>{{ row.tag_number }}</td>
+                    <td>{{ row.part_description }}</td>
+                    <td>{{ row.rejection_type }}</td>
+                    <td>
+                        {% if row.is_closed %}
+                            <span class="status-pill status-closed">Closed</span>
+                        {% else %}
+                            <span class="status-pill status-open">Open</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ row.updated_at or row.created_at }}</td>
+                    <td><a href="{{ url_for('edit_tag', tag_id=row.id) }}" class="btn-link">Edit</a></td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6">No tags tracked yet.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="print-sheet" id="report-print-sheet" aria-hidden="true">
+    <div class="print-header">
+        <div class="print-tag-block">
+            <p class="print-label">Report</p>
+            <div class="print-tag-number">Tags {{ report_range.start }} to {{ report_range.end }}</div>
+        </div>
+        <div class="print-meta">
+            <div class="print-date">
+                <span class="print-label">Total</span>
+                <span class="print-date-value">{{ report_summary.total }}</span>
+            </div>
+            <div class="print-part">
+                <span class="print-label">Open / Closed</span>
+                <span class="print-part-value">{{ report_summary.open }} open · {{ report_summary.closed }} closed</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="print-section-card">
+        <div class="print-section-title">Report Details</div>
+        <table class="print-report-table">
+            <thead>
+                <tr>
+                    <th>Tag #</th>
+                    <th>Part</th>
+                    <th>Rejection</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in report_rows %}
+                <tr>
+                    <td>{{ row.tag_number }}</td>
+                    <td>{{ row.part_description }}</td>
+                    <td>{{ row.rejection_type }}</td>
+                    <td>{% if row.is_closed %}Closed{% else %}Open{% endif %}</td>
+                    <td>{{ row.report_date }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5">No records found for this date range.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

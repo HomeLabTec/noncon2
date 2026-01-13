@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Tag {{ tag.tag_number }} · Nonconforming Tracker{% endblock %}
+{% block content %}
+<section class="detail-header">
+    <div>
+        <h1>Tag {{ tag.tag_number }}</h1>
+        <p class="muted">Part: {{ tag.part_description }}</p>
+    </div>
+    <div class="detail-actions">
+        <button class="btn btn-primary" id="print-tag-btn" type="button" data-print-target="print-sheet">Print</button>
+        <a class="btn" href="{{ url_for('edit_tag', tag_id=tag.id) }}">Edit Tag</a>
+        <a class="btn" href="{{ url_for('list_all_tags') }}">All Tags</a>
+    </div>
+</section>
+
+<section class="detail-layout">
+    {% for section in form_sections %}
+        <article class="detail-section">
+            <header class="section-header inline">
+                <h2 class="section-title">{{ section.title }}</h2>
+            </header>
+            <div class="detail-grid">
+                {% for field in section.fields %}
+                    {% set name = field.name %}
+                    {% set label = field.label %}
+                    <div class="detail-item">
+                        <span class="detail-label">{{ label }}</span>
+                        <span class="detail-value">{{ tag[name] or '--' }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    {% endfor %}
+</section>
+
+{% set print_sections = form_sections[:2] %}
+{% set primary_date = tag.containment_date or tag.date_authorized or tag.created_at %}
+<section class="print-sheet" id="print-sheet" aria-hidden="true">
+    <div class="print-header">
+        <div class="print-tag-block">
+            <p class="print-label">Tag</p>
+            <div class="print-tag-number">Tag {{ tag.tag_number }}</div>
+        </div>
+        <div class="print-meta">
+            <div class="print-date">
+                <span class="print-label">Date</span>
+                <span class="print-date-value">{{ primary_date or '--' }}</span>
+            </div>
+            <div class="print-part">
+                <span class="print-label">Part</span>
+                <span class="print-part-value">{{ tag.part_description or '--' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="print-description">
+        <div class="print-label">Defect / Issue Description</div>
+        <div class="print-description-text">{{ tag.defect_description or '--' }}</div>
+    </div>
+
+    <div class="print-section-grid">
+        {% for section in print_sections %}
+            <div class="print-section-card">
+                <div class="print-section-title">{{ section.title }}</div>
+                <div class="print-field-grid">
+                    {% for field in section.fields %}
+                        {% set name = field.name %}
+                        <div class="print-field">
+                            <div class="print-field-label">{{ field.label }}</div>
+                            <div class="print-field-value">{{ tag[name] or '--' }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

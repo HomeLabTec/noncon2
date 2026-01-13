@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} · Nonconforming Tracker{% endblock %}
+{% block content %}
+<section class="list-header">
+    <h1>{{ title }}</h1>
+    <div class="list-actions">
+        <a class="btn" href="{{ url_for('create_tag') }}">Create Tag</a>
+    </div>
+</section>
+<div class="table-responsive">
+    <table>
+        <thead>
+            <tr>
+                <th>Tag #</th>
+                <th>Part Description</th>
+                <th>Rejection Type</th>
+                <th>Disposition</th>
+                <th>Status</th>
+                <th>Updated</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in tags %}
+            <tr>
+                <td>{{ row.tag_number }}</td>
+                <td>{{ row.part_description }}</td>
+                <td>{{ row.rejection_type }}</td>
+                <td>{{ row.disposition }}</td>
+                <td>
+                    {% if row.is_closed %}
+                        <span class="status-pill status-closed">Closed</span>
+                    {% else %}
+                        <span class="status-pill status-open">Open</span>
+                    {% endif %}
+                </td>
+                <td>{{ row.updated_at or row.created_at }}</td>
+                <td class="table-actions">
+                    <a class="btn-link" href="{{ url_for('view_tag', tag_id=row.id) }}">View</a>
+                    <a class="btn-link" href="{{ url_for('edit_tag', tag_id=row.id) }}">Edit</a>
+                </td>
+            </tr>
+            {% else %}
+            <tr><td colspan="7">No records available.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

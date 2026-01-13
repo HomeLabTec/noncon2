@@ -187,6 +187,34 @@ body.dark-mode .toggle-thumb {
     align-items: center;
 }
 
+.report-tabs {
+    display: inline-flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.report-tab {
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--muted);
+    border: 1px solid var(--border);
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.12);
+    transition: all 0.2s ease;
+}
+
+.report-tab:hover {
+    color: var(--text);
+    border-color: var(--accent);
+}
+
+.report-tab.is-active {
+    color: #fff;
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
 .report-form {
     display: flex;
     flex-direction: column;

@@ -249,11 +249,11 @@ def dashboard_stats(conn: sqlite3.Connection) -> Dict[str, int]:
     }
 
 
-def report_rows(
+def report_rows_open(
     conn: sqlite3.Connection, start_date: str, end_date: str
 ) -> List[sqlite3.Row]:
     """
-    Return tag records whose primary date falls within the given range.
+    Return open tag records whose primary date falls within the given range.
 
     The primary date prefers containment, authorization, or closed dates,
     falling back to created_at when the others are missing.
@@ -264,8 +264,28 @@ def report_rows(
             *,
             {report_date_expr} AS report_date
         FROM tags
-        WHERE {report_date_expr} BETWEEN ? AND ?
+        WHERE is_closed = 0
+          AND {report_date_expr} BETWEEN ? AND ?
         ORDER BY {report_date_expr} DESC, tag_number DESC
+    """
+    return conn.execute(sql, (start_date, end_date)).fetchall()
+
+
+def report_rows_closed(
+    conn: sqlite3.Connection, start_date: str, end_date: str
+) -> List[sqlite3.Row]:
+    """
+    Return closed tag records with a closed date within the given range.
+    """
+    report_date_expr = "date(COALESCE(containment_date, date_authorized, closed_date, created_at))"
+    sql = f"""
+        SELECT
+            *,
+            {report_date_expr} AS report_date
+        FROM tags
+        WHERE is_closed = 1
+          AND date(closed_date) BETWEEN ? AND ?
+        ORDER BY date(closed_date) DESC, tag_number DESC
     """
     return conn.execute(sql, (start_date, end_date)).fetchall()
 

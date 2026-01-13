@@ -91,6 +91,9 @@
                     <th>Defect / Issue Description</th>
                     <th>Status</th>
                     <th>Report Date</th>
+                    {% if report_tab == "open" %}
+                        <th>Days Open</th>
+                    {% endif %}
                     {% if report_tab == "closed" %}
                         <th>Good Pieces</th>
                         <th>Scrap Pieces</th>
@@ -113,6 +116,9 @@
                         {% endif %}
                     </td>
                     <td>{{ row.report_date }}</td>
+                    {% if report_tab == "open" %}
+                        <td>{{ row.days_open }}</td>
+                    {% endif %}
                     {% if report_tab == "closed" %}
                         <td>{{ (row.good_pcs | int) + (row.reworked_pcs | int) }}</td>
                         <td>{{ row.scrap_pcs }}</td>
@@ -125,7 +131,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="{% if report_tab == 'closed' %}9{% else %}6{% endif %}">No records found for this date range.</td>
+                    <td colspan="{% if report_tab == 'closed' %}9{% else %}7{% endif %}">No records found for this date range.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -204,6 +210,9 @@
                     <th>Defect / Issue Description</th>
                     <th>Status</th>
                     <th>Date</th>
+                    {% if report_tab == "open" %}
+                        <th>Days Open</th>
+                    {% endif %}
                     {% if report_tab == "closed" %}
                         <th>Good Pieces</th>
                         <th>Scrap Pieces</th>
@@ -219,6 +228,9 @@
                     <td>{{ row.defect_description }}</td>
                     <td>{% if row.is_closed %}Closed{% else %}Open{% endif %}</td>
                     <td>{{ row.report_date }}</td>
+                    {% if report_tab == "open" %}
+                        <td>{{ row.days_open }}</td>
+                    {% endif %}
                     {% if report_tab == "closed" %}
                         <td>{{ (row.good_pcs | int) + (row.reworked_pcs | int) }}</td>
                         <td>{{ row.scrap_pcs }}</td>
@@ -227,7 +239,7 @@
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="{% if report_tab == 'closed' %}8{% else %}5{% endif %}">No records found for this date range.</td>
+                    <td colspan="{% if report_tab == 'closed' %}8{% else %}6{% endif %}">No records found for this date range.</td>
                 </tr>
                 {% endfor %}
             </tbody>
